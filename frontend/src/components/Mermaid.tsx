@@ -14,13 +14,20 @@ export default function Mermaid({ chart }: { chart: string }) {
 
   useEffect(() => {
     if (ref.current) {
-      mermaid.render("mermaid-diagram", chart).then(({ svg }) => {
-        if (ref.current) {
-          ref.current.innerHTML = svg;
-        }
-      });
+      const id = `mermaid-svg-${Math.random().toString(36).substring(2, 9)}`;
+      try {
+        mermaid.render(id, chart).then(({ svg }) => {
+          if (ref.current) {
+            ref.current.innerHTML = svg;
+          }
+        }).catch(err => {
+            console.error("Mermaid rendering failed:", err);
+        });
+      } catch (err) {
+        console.error("Mermaid sync error:", err);
+      }
     }
   }, [chart]);
 
-  return <div ref={ref} className="mermaid flex justify-center overflow-x-auto my-8 w-full h-[1200px]" />;
+  return <div ref={ref} className="mermaid flex justify-center overflow-x-auto my-8 w-full" />;
 }

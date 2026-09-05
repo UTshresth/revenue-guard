@@ -86,7 +86,7 @@ export default function ExplorePage() {
             <p className="dark:text-gray-400 text-gray-600 max-w-3xl text-lg">A detailed view of how RevenueGuard processes payment failures, utilizes AI for intelligent decision-making, enforces compliance, and executes multi-channel recovery.</p>
           </div>
 
-          <div className="dark:bg-[#111] bg-white border dark:border-gray-800 border-gray-200 rounded-2xl p-8 md:p-12 overflow-x-auto shadow-sm">
+          <div className="bg-[#0A0A0A] border dark:border-gray-800 border-gray-200 rounded-2xl p-8 md:p-12 overflow-x-auto shadow-sm">
             {/* Diagram Container */}
             <div className="w-full flex justify-center">
               <Mermaid chart={`flowchart TD

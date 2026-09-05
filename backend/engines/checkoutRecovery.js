@@ -50,31 +50,35 @@ const processAbandonedCheckouts = async () => {
       const aiDecision = JSON.parse(rawContent);
       console.log(`🤖 AI Decision: ${aiDecision.strategy} -> ${aiDecision.reasoning}`);
 
-      // 3. Create real Payment Link
-      const paymentLink = await razorpay.paymentLink.create({
-        amount: order.amount,
-        currency: "INR",
-        description: `Complete your order: ${order.receipt}`,
-        customer: {
-          name: "Test Customer",
-          email: "test@example.com",
-          contact: "+919876543210"
-        },
-        notify: { sms: false, email: false }, // turn off real notifications so we don't spam test accounts
-        expire_by: Math.floor(Date.now() / 1000) + (7 * 86400)
-      });
-      console.log(`✅ Created Recovery Link: ${paymentLink.short_url}`);
+      // 3. Write intent to Outbox (Fault-Tolerant Execution)
+      // Instead of calling Razorpay directly (which can fail mid-flight),
+      // we write a PENDING action to the Outbox. The dispatcher will process it.
+      const crypto = require('crypto');
+      const idempotencyKey = crypto.randomUUID();
 
-      // 4. Log everything
-      await AuditTrail.create({
+      await require('../db').Outbox.create({
+        idempotency_key: idempotencyKey,
         case_id: recoveryCase.id,
-        action: 'payment_link_created',
-        channel: 'sms',
-        message_sent: aiDecision.message,
-        llm_reasoning: aiDecision.reasoning,
-        payment_link_id: paymentLink.id,
-        payment_link_url: paymentLink.short_url
+        action_type: 'create_payment_link',
+        payload: {
+          amount: order.amount,
+          currency: "INR",
+          description: `Complete your order: ${order.receipt}`,
+          customer: {
+            name: "Test Customer",
+            email: "test@example.com",
+            contact: "+919876543210"
+          },
+          notify: { sms: false, email: false },
+          expire_by: Math.floor(Date.now() / 1000) + (7 * 86400),
+          notes: {
+            channel: 'sms',
+            message_sent: aiDecision.message,
+            llm_reasoning: aiDecision.reasoning
+          }
+        }
       });
+      console.log(`📦 Wrote recovery intent to Outbox (Key: ${idempotencyKey})`);
 
       await recoveryCase.update({ status: 'open' });
     }

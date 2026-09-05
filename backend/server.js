@@ -281,6 +281,16 @@ app.post('/api/agent/run', async (req, res) => {
     }
     results.demoSeed = 'diversity cases ensured';
 
+    // Run the fault-tolerant outbox dispatcher
+    try {
+      const { processOutbox } = require('./execution/dispatcher');
+      await processOutbox();
+      results.outbox = 'processed';
+    } catch (e) {
+      console.error(e);
+      results.outbox = 'failed';
+    }
+
     res.json({ success: true, message: 'All engines executed', results });
   } catch (error) {
     console.error(error);

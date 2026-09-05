@@ -76,6 +76,23 @@ const PromiseToPay = sequelize.define('PromiseToPay', {
   }
 });
 
+// Fault-Tolerant Outbox for Razorpay API calls
+const Outbox = sequelize.define('Outbox', {
+  idempotency_key: {
+    type: DataTypes.STRING,
+    primaryKey: true
+  },
+  case_id: DataTypes.STRING,
+  action_type: DataTypes.STRING, // e.g. 'create_payment_link'
+  payload: DataTypes.JSON,       // Razorpay API payload
+  status: {
+    type: DataTypes.ENUM('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'),
+    defaultValue: 'PENDING'
+  },
+  result: DataTypes.JSON,        // Razorpay API response
+  error_log: DataTypes.TEXT
+});
+
 const syncDb = async () => {
   await sequelize.sync({ alter: true });
   console.log('Database synced');
@@ -86,5 +103,6 @@ module.exports = {
   Case,
   AuditTrail,
   PromiseToPay,
+  Outbox,
   syncDb
 };

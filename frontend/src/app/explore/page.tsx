@@ -120,7 +120,7 @@ export default function ExplorePage() {
     
     K -->|Payment Captured| M[State Machine\\nStatus: SECURED]
     
-    G & J & L & M --> N[(Immutable Audit Log\\nSHA-256 Crypto Hash)]
+    G & J & L & M --> N[(Immutable Audit Log)]
 
     style A fill:#1a1a2e,stroke:#3b82f6,stroke-width:2px,color:#fff
     style C fill:#2d1b4e,stroke:#8b5cf6,stroke-width:2px,color:#fff

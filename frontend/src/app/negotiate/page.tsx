@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ShieldCheck, MessageSquare, Send, Zap, Bot, User, CheckCircle, ExternalLink } from 'lucide-react';
 
-const API = 'http://localhost:3001';
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface Message {
   role: 'user' | 'assistant';

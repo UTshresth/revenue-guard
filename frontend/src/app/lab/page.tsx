@@ -9,7 +9,7 @@ import {
   ChevronRight, Lock, RefreshCw
 } from 'lucide-react';
 
-const API = 'http://localhost:3001';
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 const FAILURE_SCENARIOS = [
   { id: 'checkout_dropoff', label: 'Checkout Drop-off', description: 'User abandoned at UPI / OTP confirmation screen.', defaultAmount: 2499, channel: 'SMS', category: 'Drop-off', color: 'blue', icon: '🛒' },

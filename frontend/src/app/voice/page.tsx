@@ -6,7 +6,7 @@ import { ArrowLeft, ShieldCheck, Mic, PhoneCall, Volume2, PhoneOff, Phone, Activ
 
 
 
-const API = 'http://localhost:3001';
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface VoiceScript {
   script: string;

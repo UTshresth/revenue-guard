@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ShieldCheck, Play, Terminal, ExternalLink, ChevronRight, CheckCircle2, Loader2 } from 'lucide-react';
 
-const API = 'http://localhost:3001';
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface LogEntry {
   emoji: string;

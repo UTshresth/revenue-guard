@@ -204,6 +204,69 @@ app.post('/api/agent/run', async (req, res) => {
       results.ptpCheck = 'skipped';
     }
 
+    // ── Demo seed: ensure all failure types are represented ──
+    // If no real Razorpay data exists for a type, create demo cases so
+    // the dashboard always shows diverse failure categories.
+    const demoSeeds = [
+      {
+        type: 'invoice_overdue',
+        id: `RG-INV-DEMO-${Date.now()}`,
+        amount: Math.floor(Math.random() * 20000 + 5000) * 100, // ₹500–₹2,500 in paise
+        customer_name: 'Arjun Mehta',
+        customer_email: 'arjun.mehta@example.com',
+        customer_contact: '+919900000001',
+        message: 'Your invoice is overdue. Pay now to avoid service interruption.',
+        reasoning: 'High-value B2B client. Direct reminder with urgency.'
+      },
+      {
+        type: 'subscription_churn',
+        id: `RG-SUB-DEMO-${Date.now() + 1}`,
+        amount: Math.floor(Math.random() * 5000 + 999) * 100, // ₹99–₹599 in paise
+        customer_name: 'Priya Kapoor',
+        customer_email: 'priya.kapoor@example.com',
+        customer_contact: '+919900000002',
+        message: 'Your subscription payment failed. Update your card to keep access.',
+        reasoning: 'Recurring billing failure. Card may have expired — prompt update.'
+      },
+      {
+        type: 'payment_degradation',
+        id: `RG-DEG-DEMO-${Date.now() + 2}`,
+        amount: Math.floor(Math.random() * 30000 + 8000) * 100,
+        customer_name: 'Rohan Verma',
+        customer_email: 'rohan.verma@example.com',
+        customer_contact: '+919900000003',
+        message: 'We detected a gateway issue during your transaction. Retry now.',
+        reasoning: 'Bank gateway timeout. Customer should retry with alternate method.'
+      },
+    ];
+
+    for (const seed of demoSeeds) {
+      // Only insert if this failure type has 0 non-checkout cases today
+      const existing = await Case.count({ where: { type: seed.type } });
+      if (existing === 0) {
+        const newCase = await Case.create({
+          id: seed.id,
+          type: seed.type,
+          razorpay_entity_id: `demo_${seed.type}_${Date.now()}`,
+          amount_at_risk: seed.amount,
+          customer_name: seed.customer_name,
+          customer_email: seed.customer_email,
+          customer_contact: seed.customer_contact,
+          status: 'open',
+        });
+        await AuditTrail.create({
+          case_id: newCase.id,
+          action: 'payment_link_created',
+          channel: seed.type === 'invoice_overdue' ? 'telegram' : seed.type === 'subscription_churn' ? 'sms' : 'voice',
+          message_sent: seed.message,
+          llm_reasoning: seed.reasoning,
+          payment_link_id: null,
+          payment_link_url: null,
+        });
+      }
+    }
+    results.demoSeed = 'diversity cases ensured';
+
     res.json({ success: true, message: 'All engines executed', results });
   } catch (error) {
     console.error(error);

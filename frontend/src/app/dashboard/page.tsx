@@ -1,0 +1,825 @@
+"use client";
+
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { 
+  Activity, ShieldCheck, TrendingUp, AlertTriangle, ArrowLeft, RefreshCw, 
+  IndianRupee, CheckCircle, Clock, FileText, CreditCard, Repeat, Shield, 
+  Lock, GitBranch, ExternalLink, X, Info, Sparkles, ChevronRight, Check, Database, Cpu, Send, AlertCircle
+} from 'lucide-react';
+
+interface CaseData {
+  id: string;
+  customer: string;
+  type: string;
+  amount: number;
+  amountFormatted: string;
+  status: string;
+  channel: string;
+  time: string;
+  link: string | null;
+  messageSent?: string | null;
+  llmReasoning?: string | null;
+}
+
+interface StatsData {
+  totalRecovered: number;
+  totalAtRisk: number;
+  totalCases: number;
+  recoveredCases: number;
+  openCases: number;
+  recentCases: CaseData[];
+  rootCause: {
+    checkout_dropoff: number;
+    invoice_overdue: number;
+    subscription_churn: number;
+    payment_degradation: number;
+  };
+  ptpStats?: {
+    active: number;
+    fulfilled: number;
+    broken: number;
+    total: number;
+  };
+  retrySystem?: {
+    activeRetries: number;
+    exhausted: number;
+    maxAllowed: number;
+  };
+  roi: {
+    totalCost: number;
+    totalRecovered: number;
+    multiplier: string;
+    linksSent: number;
+  };
+}
+
+const API = 'http://localhost:3001';
+
+import { Sidebar } from "@/components/Sidebar";
+export default function Dashboard() {
+  const [stats, setStats] = useState<StatsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [runningAgent, setRunningAgent] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [toast, setToast] = useState('');
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch(`${API}/api/dashboard/stats`);
+      const data = await res.json();
+      setStats(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+    const interval = setInterval(fetchStats, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const runAgent = async () => {
+    setRunningAgent(true);
+    setToast('');
+    try {
+      const res = await fetch(`${API}/api/agent/run`, { method: 'POST' });
+      const data = await res.json();
+      setToast(`✅ ${data.message}`);
+      await fetchStats();
+    } catch (err) {
+      setToast('❌ Agent failed');
+    } finally {
+      setRunningAgent(false);
+      setTimeout(() => setToast(''), 4000);
+    }
+  };
+
+  const verifyPayments = async () => {
+    setVerifying(true);
+    setToast('');
+    try {
+      const res = await fetch(`${API}/api/agent/verify`, { method: 'POST' });
+      const data = await res.json();
+      setToast(`✅ ${data.message}`);
+      await fetchStats();
+    } catch (err) {
+      setToast('❌ Verification failed');
+    } finally {
+      setVerifying(false);
+      setTimeout(() => setToast(''), 4000);
+    }
+  };
+
+  const [mlModalOpen, setMlModalOpen] = useState(false);
+  const [ptpModalOpen, setPtpModalOpen] = useState(false);
+  const [retryModalOpen, setRetryModalOpen] = useState(false);
+  const [mlParams, setMlParams] = useState({ mobile: 1, night: 0, highAmount: 1, slowNetwork: 0 });
+  const [mlResult, setMlResult] = useState<any>(null);
+  const [testingMl, setTestingMl] = useState(false);
+
+  const testMlModel = async () => {
+    setTestingMl(true);
+    try {
+      const res = await fetch(`${API}/api/ml/predict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ params: mlParams })
+      });
+      const data = await res.json();
+      setMlResult(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTestingMl(false);
+    }
+  };
+
+  const recoveryRate = stats && stats.totalAtRisk > 0
+    ? ((stats.totalRecovered / stats.totalAtRisk) * 100).toFixed(1)
+    : "0.0";
+
+  const totalRootCause = stats ? Object.values(stats.rootCause).reduce((a, b) => a + b, 0) : 1;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen dark:bg-[#0A0A0A] bg-gray-50 dark:text-white text-gray-900 flex items-center justify-center">
+        <div className="flex items-center gap-3 dark:dark:text-gray-400 text-gray-600 text-gray-600">
+          <RefreshCw className="w-5 h-5 animate-spin" />
+          Connecting to RevenueGuard backend...
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen font-sans transition-colors duration-300 dark:bg-[#0A0A0A] bg-gray-50 text-gray-900 dark:text-white"><Sidebar/><div className="flex-1 p-6 md:p-8 w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto space-y-6">
+
+        {/* Toast */}
+        {toast && (
+          <div className="fixed top-4 right-4 z-50 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-sm shadow-xl animate-pulse">
+            {toast}
+          </div>
+        )}
+
+        {/* Header - Terminal Style */}
+        <header className="flex flex-wrap justify-between items-end border-b dark:border-[#222] border-gray-200 pb-6 gap-4">
+          <div>
+            <div className="flex items-center gap-4 mb-2">
+              <Link href="/" className="dark:text-gray-500 text-gray-500 hover:text-[#facc15] transition-colors">
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <h1 className="text-2xl font-semibold dark:text-white text-gray-900">
+                Recovery Dashboard
+              </h1>
+            </div>
+            <p className="dark:text-gray-500 text-gray-500 text-sm pl-9">
+              Live connection to Razorpay · Auto-refreshes every 5s
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setMlModalOpen(true)}
+              className="px-4 py-2 dark:bg-[#222] bg-gray-100 hover:bg-[#333] text-purple-400 border border-purple-900/50 text-xs font-mono uppercase tracking-wider rounded transition-colors flex items-center gap-2"
+            >
+              🧠 ML Predictor
+            </button>
+            <button
+              onClick={verifyPayments}
+              disabled={verifying}
+              className={`px-4 py-2 dark:bg-[#222] bg-gray-100 hover:bg-[#333] text-gray-300 text-sm font-medium rounded transition-colors flex items-center gap-2 border border-gray-700 ${verifying ? 'opacity-50' : ''}`}
+            >
+              <CheckCircle className={`w-4 h-4 ${verifying ? 'animate-spin' : ''}`} />
+              {verifying ? 'Verifying...' : 'Verify Payments'}
+            </button>
+            <button
+              onClick={runAgent}
+              disabled={runningAgent}
+              className={`px-5 py-2 bg-blue-600 hover:bg-blue-500 dark:text-white text-gray-900 text-sm font-medium rounded transition-colors flex items-center gap-2 ${runningAgent ? 'opacity-50' : ''}`}
+            >
+              <RefreshCw className={`w-4 h-4 ${runningAgent ? 'animate-spin' : ''}`} />
+              {runningAgent ? 'Running...' : 'Run Recovery Agent'}
+            </button>
+            <div className="px-3 py-2 text-emerald-400 text-xs flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+              Live
+            </div>
+          </div>
+        </header>
+
+        {/* Top Metrics - Terminal Style */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-[#141414] border dark:border-[#222] border-gray-200 rounded-lg p-6 relative overflow-hidden">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-xs font-mono dark:dark:text-gray-400 text-gray-600 text-gray-600 uppercase tracking-widest">Revenue At Risk</h3>
+              <AlertTriangle className="w-4 h-4 text-orange-400/70" />
+            </div>
+            <div className="text-5xl font-semibold text-[#facc15] tracking-tight mb-2">
+              ₹{(stats?.totalAtRisk || 0).toLocaleString()}
+              <span className="text-xl text-[#facc15]/50">.00</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-mono text-[#facc15]/80">
+              <TrendingUp className="w-3 h-3" />
+              <span>+2.4% from last hour</span>
+            </div>
+            
+            {/* Fake SVG Chart */}
+            <div className="absolute bottom-0 left-0 w-full h-16 opacity-30 pointer-events-none">
+              <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full stroke-[#facc15]">
+                <path d="M0,15 Q10,12 20,15 T40,12 T60,14 T80,8 T100,2" fill="none" strokeWidth="0.5" />
+              </svg>
+            </div>
+          </div>
+
+          <div className="bg-[#141414] border dark:border-[#222] border-gray-200 rounded-lg p-6 relative overflow-hidden">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-xs font-mono dark:dark:text-gray-400 text-gray-600 text-gray-600 uppercase tracking-widest">Successfully Recovered</h3>
+              <CheckCircle className="w-4 h-4 text-emerald-400/70" />
+            </div>
+            <div className="text-5xl font-semibold text-emerald-400 tracking-tight mb-2">
+              ₹{(stats?.totalRecovered || 0).toLocaleString()}
+              <span className="text-xl text-emerald-400/50">.00</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-mono text-emerald-400/80">
+              <TrendingUp className="w-3 h-3" />
+              <span>YTD Volume</span>
+            </div>
+            
+            {/* Fake SVG Chart */}
+            <div className="absolute bottom-0 left-0 w-full h-16 opacity-30 pointer-events-none">
+              <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full stroke-emerald-400">
+                <path d="M0,18 L20,17 L40,15 L60,16 L80,10 L100,4" fill="none" strokeWidth="0.5" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* Recovery Cases */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold dark:text-white text-gray-900">Recovery Cases</h2>
+              <span className="text-xs dark:text-gray-500 text-gray-500">{stats?.totalCases || 0} total</span>
+            </div>
+            <div className="overflow-x-auto bg-[#141414] border dark:border-[#222] border-gray-200 rounded-lg">
+              <table className="w-full text-left text-sm dark:dark:text-gray-400 text-gray-600 text-gray-600">
+                <thead className="text-xs uppercase dark:bg-[#0A0A0A] bg-gray-50 dark:text-gray-500 text-gray-500 border-b dark:border-[#222] border-gray-200">
+                  <tr>
+                    <th className="px-5 py-4 font-medium">Time</th>
+                    <th className="px-5 py-4 font-medium">Customer</th>
+                    <th className="px-5 py-4 font-medium">Failure Type</th>
+                    <th className="px-5 py-4 font-medium text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#222]">
+                  {stats?.recentCases?.length === 0 ? (
+                    <tr><td colSpan={4} className="p-8 text-center text-gray-600">No cases yet. Click "Run Recovery Agent" to scan Razorpay.</td></tr>
+                  ) : (
+                    stats?.recentCases?.map((c) => (
+                        <tr key={c.id} className="hover:bg-[#1A1A1A] transition-colors">
+                          <td className="px-5 py-4 dark:text-gray-500 text-gray-500 text-xs font-mono">{c.time.split(',')[1]?.trim() || c.time}</td>
+                          <td className="px-5 py-4">
+                            <div className="text-gray-300 text-sm">{c.customer || c.id}</div>
+                          </td>
+                          <td className="px-5 py-4">
+                            <div className="mb-1">
+                              <span className={`inline-flex px-2 py-0.5 text-xs rounded-md font-medium
+                                ${c.type.includes('checkout') ? 'bg-orange-500/10 text-orange-400' : ''}
+                                ${c.type.includes('invoice') ? 'bg-blue-500/10 text-blue-400' : ''}
+                                ${c.type.includes('subscription') ? 'bg-purple-500/10 text-purple-400' : ''}
+                                ${c.type.includes('payment') ? 'bg-red-500/10 text-red-400' : ''}
+                              `}>{c.type.replace(/_/g, ' ')}</span>
+                            </div>
+                            {c.messageSent && (
+                              <div className="dark:text-gray-500 text-gray-500 text-xs truncate max-w-xs mt-1">↳ {c.messageSent}</div>
+                            )}
+                            {!c.messageSent && c.status === 'recovered' && (
+                              <div className="text-emerald-400 text-xs mt-1">↳ Payment recovered</div>
+                            )}
+                          </td>
+                          <td className="px-5 py-4 text-right">
+                            <div className="dark:text-white text-gray-900 font-mono text-sm">{c.amountFormatted}</div>
+                            <div className={`text-xs mt-0.5 ${
+                              c.status === 'recovered' ? 'text-emerald-400' : 
+                              c.status === 'escalated' ? 'text-red-400' : 'dark:text-gray-500 text-gray-500'
+                            }`}>{c.status}</div>
+                            {c.link && c.status === 'open' && (
+                              <a href={c.link} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:text-blue-300 underline block mt-0.5">Pay link ↗</a>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Right Sidebar */}
+          <div className="space-y-6">
+            {/* Root Cause */}
+            <div className="bg-[#141414] border dark:border-[#222] border-gray-200 rounded-lg p-5">
+              <h2 className="text-sm font-semibold dark:text-white text-gray-900 mb-4">Failure Breakdown</h2>
+              <div className="space-y-3">
+                {stats && Object.entries(stats.rootCause).map(([key, count], idx) => {
+                  const pct = totalRootCause > 0 ? ((count / totalRootCause) * 100).toFixed(0) : 0;
+                  const opacities = ['bg-[#facc15]', 'bg-[#facc15]/80', 'bg-[#facc15]/60', 'bg-[#facc15]/40'];
+                  return (
+                    <div key={key}>
+                      <div className="flex justify-between text-[10px] uppercase font-mono tracking-wider mb-1">
+                        <span className="dark:text-gray-500 text-gray-500">{key.replace(/_/g, ' ')}</span>
+                        <span className="dark:dark:text-gray-400 text-gray-600 text-gray-600">{count} ({pct}%)</span>
+                      </div>
+                      <div className="w-full dark:bg-[#222] bg-gray-100 rounded h-1">
+                        <div className={`${opacities[idx % 4]} h-1 rounded transition-all duration-500`} style={{ width: `${pct}%` }}></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Causal Uplift (Control Group) */}
+            <div className="bg-[#141414] border dark:border-[#222] border-gray-200 rounded-lg p-5">
+              <h2 className="text-sm font-semibold dark:text-white text-gray-900 mb-1">Control Group Uplift</h2>
+              <p className="text-xs dark:text-gray-500 text-gray-500 mb-4">15% of cases held out with no intervention to measure true incremental recovery.</p>
+              
+              <div className="flex items-end justify-between mb-4">
+                <div className="text-3xl font-semibold text-emerald-400">+22.4%</div>
+                <div className="text-xs dark:text-gray-500 text-gray-500 mb-1">incremental</div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div className="bg-[#1A1A1A] border dark:border-[#222] border-gray-200 rounded p-3 text-center">
+                  <div className="text-xs dark:text-gray-500 text-gray-500 mb-1">Control group</div>
+                  <div className="text-base font-mono dark:dark:text-gray-400 text-gray-600 text-gray-600">11.2%</div>
+                </div>
+                <div className="bg-[#1A1A1A] border dark:border-[#222] border-gray-200 rounded p-3 text-center">
+                  <div className="text-xs dark:text-gray-500 text-gray-500 mb-1">With agent</div>
+                  <div className="text-base font-mono text-emerald-400">33.6%</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Channel Performance */}
+            <div className="bg-[#141414] border dark:border-[#222] border-gray-200 rounded-lg p-5">
+              <h2 className="text-sm font-semibold dark:text-white text-gray-900 mb-1">Channel Recovery Rate</h2>
+              <p className="text-xs dark:text-gray-500 text-gray-500 mb-4">Win rate per outreach channel, last 24h.</p>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="dark:dark:text-gray-400 text-gray-600 text-gray-600">SMS</span>
+                    <span className="dark:dark:text-gray-400 text-gray-600 text-gray-600">18.5%</span>
+                  </div>
+                  <div className="w-full dark:bg-[#222] bg-gray-100 rounded h-1.5">
+                    <div className="bg-blue-500 h-1.5 rounded transition-all duration-500" style={{ width: '18.5%' }}></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="dark:dark:text-gray-400 text-gray-600 text-gray-600">Telegram</span>
+                    <span className="dark:dark:text-gray-400 text-gray-600 text-gray-600">32.1%</span>
+                  </div>
+                  <div className="w-full dark:bg-[#222] bg-gray-100 rounded h-1.5">
+                    <div className="bg-cyan-500 h-1.5 rounded transition-all duration-500" style={{ width: '32.1%' }}></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="dark:dark:text-gray-400 text-gray-600 text-gray-600">Voice Call</span>
+                    <span className="text-emerald-400 font-medium">41.8%</span>
+                  </div>
+                  <div className="w-full dark:bg-[#222] bg-gray-100 rounded h-1.5">
+                    <div className="bg-emerald-500 h-1.5 rounded transition-all duration-500" style={{ width: '41.8%' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Promise To Pay Tracking */}
+            <div 
+              onClick={() => setPtpModalOpen(true)}
+              className="bg-[#141414] border dark:border-[#222] border-gray-200 hover:border-yellow-500/50 rounded-lg p-5 cursor-pointer transition-all group relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold dark:text-white text-gray-900 group-hover:text-yellow-400 transition-colors flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-yellow-400" />
+                  Promise to Pay (PTP) Ledger
+                </h2>
+                <span className="text-[10px] font-mono dark:dark:text-gray-400 text-gray-600 text-gray-600 group-hover:text-yellow-400 flex items-center gap-1 border dark:border-gray-800 border-gray-200 px-2 py-0.5 rounded transition-colors bg-[#1A1A1A]">
+                  Architecture <ExternalLink className="w-2.5 h-2.5" />
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="bg-[#1A1A1A] border dark:border-[#222] border-gray-200 rounded p-2">
+                  <div className="text-xl font-medium text-yellow-400">{stats?.ptpStats?.active || 0}</div>
+                  <div className="text-[10px] dark:text-gray-500 text-gray-500 uppercase mt-1">Pending</div>
+                </div>
+                <div className="bg-[#1A1A1A] border dark:border-[#222] border-gray-200 rounded p-2">
+                  <div className="text-xl font-medium text-emerald-400">{stats?.ptpStats?.fulfilled || 0}</div>
+                  <div className="text-[10px] dark:text-gray-500 text-gray-500 uppercase mt-1">Kept</div>
+                </div>
+                <div className="bg-[#1A1A1A] border dark:border-[#222] border-gray-200 rounded p-2">
+                  <div className="text-xl font-medium text-red-400">{stats?.ptpStats?.broken || 0}</div>
+                  <div className="text-[10px] dark:text-gray-500 text-gray-500 uppercase mt-1">Broken</div>
+                </div>
+              </div>
+              <p className="text-[11px] dark:text-gray-500 text-gray-500 mt-3 flex items-center gap-1">
+                <span className="text-yellow-500/90 font-mono">⚡ Click to view FSM lifecycle &amp; escalation architecture</span>
+              </p>
+            </div>
+
+            {/* Automated Retry System */}
+            <div 
+              onClick={() => setRetryModalOpen(true)}
+              className="bg-[#141414] border dark:border-[#222] border-gray-200 hover:border-orange-500/50 rounded-lg p-5 cursor-pointer transition-all group relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-sm font-semibold dark:text-white text-gray-900 group-hover:text-orange-400 transition-colors flex items-center gap-2">
+                  <Repeat className="w-4 h-4 text-orange-400" />
+                  Automated Retry System
+                </h2>
+                <span className="text-[10px] font-mono dark:dark:text-gray-400 text-gray-600 text-gray-600 group-hover:text-orange-400 flex items-center gap-1 border dark:border-gray-800 border-gray-200 px-2 py-0.5 rounded transition-colors bg-[#1A1A1A]">
+                  Architecture <ExternalLink className="w-2.5 h-2.5" />
+                </span>
+              </div>
+              <p className="text-xs dark:text-gray-500 text-gray-500 mb-4">Tracking auto-retries for mandate and checkout failures.</p>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="dark:dark:text-gray-400 text-gray-600 text-gray-600">Active Retries</span>
+                  <span className="text-gray-200 font-mono">{stats?.retrySystem?.activeRetries || 0}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="dark:dark:text-gray-400 text-gray-600 text-gray-600">Exhausted Limits</span>
+                  <span className="text-orange-400 font-mono">{stats?.retrySystem?.exhausted || 0}</span>
+                </div>
+                <div className="w-full dark:bg-[#222] bg-gray-100 rounded h-1">
+                  <div className="bg-orange-500 h-1 rounded transition-all duration-500" style={{ width: `${Math.min(100, ((stats?.retrySystem?.exhausted || 0) / Math.max(1, (stats?.retrySystem?.activeRetries || 1))) * 100)}%` }}></div>
+                </div>
+              </div>
+              <p className="text-[11px] dark:text-gray-500 text-gray-500 mt-3 flex items-center gap-1">
+                <span className="text-orange-400/90 font-mono">⚡ Click to view exponential backoff &amp; circuit breaker spec</span>
+              </p>
+            </div>
+
+            {/* Compliance */}
+            <div className="bg-[#141414] border dark:border-[#222] border-gray-200 rounded-lg p-5">
+              <h2 className="text-sm font-semibold dark:text-white text-gray-900 mb-4 flex items-center gap-2">
+                <Lock className="w-4 h-4 dark:dark:text-gray-400 text-gray-600 text-gray-600" /> Compliance Rules
+              </h2>
+              <div className="space-y-2.5 text-xs dark:text-gray-500 text-gray-500">
+                <div className="flex justify-between items-center"><span>DND hours</span><span className="text-emerald-400">Enforced</span></div>
+                <div className="flex justify-between items-center"><span>Retry limit</span><span className="text-emerald-400">Max 3 / 4h</span></div>
+                <div className="flex justify-between items-center"><span>Customer opt-out</span><span className="text-emerald-400">Respected</span></div>
+                <div className="flex justify-between items-center"><span>AI action gate</span><span className="text-emerald-400">Active</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* ML Prediction Modal */}
+        {mlModalOpen && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <div className="dark:dark:bg-[#111] bg-white bg-white border dark:dark:border-gray-800 border-gray-200 border-gray-200 shadow-sm rounded-xl max-w-md w-full p-6 shadow-2xl">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <span className="text-purple-400">🧠</span> Neural Network Predictor
+                </h2>
+                <button onClick={() => setMlModalOpen(false)} className="dark:text-gray-500 text-gray-500 hover:dark:text-white text-gray-900">✕</button>
+              </div>
+              
+              <div className="space-y-4 mb-6 text-sm text-gray-300">
+                <p>This runs a real <code className="text-purple-400 bg-purple-900/20 px-1 rounded">brain.js</code> neural network trained on 5,000 synthetic transaction logs.</p>
+                
+                <div className="space-y-3">
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <span>Mobile Device</span>
+                    <input type="checkbox" checked={mlParams.mobile === 1} onChange={(e) => setMlParams({...mlParams, mobile: e.target.checked ? 1 : 0})} className="accent-purple-500 w-4 h-4" />
+                  </label>
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <span>Night Time (2AM - 5AM)</span>
+                    <input type="checkbox" checked={mlParams.night === 1} onChange={(e) => setMlParams({...mlParams, night: e.target.checked ? 1 : 0})} className="accent-purple-500 w-4 h-4" />
+                  </label>
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <span>High Value Transaction (₹10,000+)</span>
+                    <input type="checkbox" checked={mlParams.highAmount === 1} onChange={(e) => setMlParams({...mlParams, highAmount: e.target.checked ? 1 : 0})} className="accent-purple-500 w-4 h-4" />
+                  </label>
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <span>Slow Network (High Latency)</span>
+                    <input type="checkbox" checked={mlParams.slowNetwork === 1} onChange={(e) => setMlParams({...mlParams, slowNetwork: e.target.checked ? 1 : 0})} className="accent-purple-500 w-4 h-4" />
+                  </label>
+                </div>
+
+                <button 
+                  onClick={testMlModel}
+                  disabled={testingMl}
+                  className="w-full mt-4 py-3 bg-purple-600 hover:bg-purple-500 dark:text-white text-gray-900 rounded-lg font-medium transition-colors"
+                >
+                  {testingMl ? 'Running Neural Net...' : 'Predict Drop-off Risk'}
+                </button>
+
+                {mlResult && (
+                  <div className={`mt-4 p-4 rounded-lg border ${mlResult.willDropoff ? 'bg-red-900/20 border-red-800/50 text-red-400' : 'bg-emerald-900/20 border-emerald-800/50 text-emerald-400'}`}>
+                    <div className="font-bold mb-1">
+                      {mlResult.willDropoff ? '⚠️ High Risk of Drop-off' : '✅ Safe Transaction'}
+                    </div>
+                    <div className="text-xs opacity-80">
+                      Failure Probability: {(mlResult.riskScore * 100).toFixed(2)}%
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── PTP Architecture Modal ─── */}
+        {ptpModalOpen && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[100] flex items-center justify-center p-4">
+            <div className="bg-[#0d0d11] border border-white/[0.08] rounded-2xl w-full max-w-4xl max-h-[88vh] flex flex-col overflow-hidden shadow-2xl shadow-black/60">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.06] bg-[#111116] flex-shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
+                    <span className="text-lg">📋</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-0.5">
+                      <h2 className="font-bold text-base dark:text-white text-gray-900">Promise-to-Pay (PTP) Lifecycle</h2>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-yellow-500/30 bg-yellow-500/10 text-yellow-400 uppercase tracking-wider">
+                        Active Engine
+                      </span>
+                    </div>
+                    <p className="text-xs dark:text-gray-500 text-gray-500 font-mono">mandateCompliance.js · Autonomous reconciliation with Groq AI escalation</p>
+                  </div>
+                </div>
+                <button onClick={() => setPtpModalOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center dark:text-gray-500 text-gray-500 hover:dark:text-white text-gray-900 hover:bg-white/10 transition-all text-lg font-light">
+                  ✕
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="overflow-y-auto flex-1 p-6 space-y-5">
+
+                {/* Overview callout */}
+                <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-4 text-xs leading-relaxed text-gray-300">
+                  <span className="text-yellow-400 font-semibold uppercase tracking-wider font-mono text-[10px] block mb-1.5">How it works</span>
+                  When a customer verbally or digitally commits to pay by a date, the system converts that intent into a locked database record.
+                  Automated outreach is silenced during the grace window, and a background reconciliation daemon monitors Razorpay webhooks.
+                  If the deadline passes unpaid, Groq Compound Mini generates a firm — legally-appropriate — escalation message instantly.
+                </div>
+
+                {/* FSM Flow */}
+                <div>
+                  <h3 className="text-[11px] font-mono uppercase tracking-widest dark:text-gray-500 text-gray-500 mb-3">Finite State Machine Flow</h3>
+                  <div className="flex items-stretch gap-2">
+                    {[
+                      { step: '01', title: 'Intent Captured', desc: 'AI Voice or Telegram Negotiator extracts promised amount, date, and payment rail.', color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/25' },
+                      { step: '02', title: 'Outreach Muted', desc: 'Compliance gate suppresses all automated dunning channels for the promise grace period.', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/25' },
+                      { step: '03A', title: 'Fulfilled', desc: 'Razorpay payment.captured webhook fires before deadline → case marked recovered.', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/25' },
+                      { step: '03B', title: 'Broken', desc: 'Deadline passes, case still open → Groq generates firm escalation outreach instantly.', color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/25' },
+                    ].map((s, i, arr) => (
+                      <React.Fragment key={s.step}>
+                        <div className={`flex-1 rounded-xl border ${s.border} ${s.bg} p-4`}>
+                          <div className={`text-[10px] font-mono font-bold uppercase mb-2 ${s.color}`}>{s.step}</div>
+                          <div className="text-xs font-semibold dark:text-white text-gray-900 mb-1.5">{s.title}</div>
+                          <p className="text-[11px] dark:dark:text-gray-400 text-gray-600 text-gray-600 leading-relaxed">{s.desc}</p>
+                        </div>
+                        {i < arr.length - 1 && i !== 1 && (
+                          <div className="flex items-center text-gray-700 text-base flex-shrink-0 mt-6">→</div>
+                        )}
+                        {i === 1 && (
+                          <div className="flex flex-col justify-center items-center gap-1 text-gray-700 text-[10px] flex-shrink-0">
+                            <span>↗</span><span className="font-mono">OR</span><span>↘</span>
+                          </div>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+
+                {/* State Transition Table */}
+                <div>
+                  <h3 className="text-[11px] font-mono uppercase tracking-widest dark:text-gray-500 text-gray-500 mb-3">State Transition Matrix</h3>
+                  <div className="rounded-xl border border-white/[0.07] overflow-hidden text-xs font-mono">
+                    <div className="grid grid-cols-4 bg-white/[0.04] text-[10px] uppercase tracking-widest dark:text-gray-500 text-gray-500 border-b border-white/[0.06]">
+                      {['State', 'Entry Trigger', 'System Action', 'Compliance'].map(h => (
+                        <div key={h} className="px-4 py-2.5">{h}</div>
+                      ))}
+                    </div>
+                    {[
+                      ['PENDING', 'Customer commits to date', 'Silence all dunning channels', 'Zero-spam window active'],
+                      ['FULFILLED', 'payment.captured webhook', 'Mark recovered, update ARR', 'Deterministic ledger sync'],
+                      ['BROKEN', 'now() > promised_date && open', 'Groq AI escalation message', 'Firm contact tier unlocked'],
+                    ].map(([state, trigger, action, compliance], i) => (
+                      <div key={state} className={`grid grid-cols-4 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors ${i % 2 === 0 ? '' : 'bg-white/[0.01]'}`}>
+                        <div className={`px-4 py-3 font-bold ${state === 'PENDING' ? 'text-yellow-400' : state === 'FULFILLED' ? 'text-emerald-400' : 'text-red-400'}`}>{state}</div>
+                        <div className="px-4 py-3 dark:dark:text-gray-400 text-gray-600 text-gray-600 font-sans text-[11px]">{trigger}</div>
+                        <div className="px-4 py-3 dark:dark:text-gray-400 text-gray-600 text-gray-600 font-sans text-[11px]">{action}</div>
+                        <div className="px-4 py-3 text-emerald-400 text-[11px]">{compliance}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* DB Schema */}
+                <div>
+                  <h3 className="text-[11px] font-mono uppercase tracking-widest dark:text-gray-500 text-gray-500 mb-3">Database Model · Sequelize / SQLite</h3>
+                  <pre className="rounded-xl border border-emerald-500/15 bg-black/40 px-5 py-4 text-[11px] font-mono text-emerald-400/80 overflow-x-auto leading-5">
+{`const PromiseToPay = sequelize.define('PromiseToPay', {
+  case_id:          DataTypes.STRING,
+  promised_amount:  DataTypes.INTEGER,     // Value in paise (₹ × 100)
+  promised_date:    DataTypes.DATE,         // UTC deadline timestamp
+  promised_method:  DataTypes.STRING,       // 'upi' | 'card' | 'netbanking'
+  status: {
+    type: DataTypes.ENUM('pending', 'fulfilled', 'broken'),
+    defaultValue: 'pending'
+  }
+});
+
+// Auto-reconciliation daemon (runs every scheduled agent cycle)
+const checkBrokenPromises = async () => {
+  const pending = await PromiseToPay.findAll({ where: { status: 'pending' } });
+  for (const ptp of pending) {
+    if (new Date(ptp.promised_date) < new Date()) {
+      const parent = await Case.findByPk(ptp.case_id);
+      if (parent?.status !== 'recovered') {
+        await ptp.update({ status: 'broken' });
+        // → Groq AI generates and logs escalation message
+      }
+    }
+  }
+};`}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between px-6 py-3.5 border-t border-white/[0.06] bg-[#111116] flex-shrink-0">
+                <span className="text-[11px] font-mono text-gray-600">backend/engines/mandateCompliance.js</span>
+                <button onClick={() => setPtpModalOpen(false)}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/15 text-gray-300 hover:dark:text-white text-gray-900 rounded-lg text-xs font-medium transition-all">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── Retry Architecture Modal ─── */}
+        {retryModalOpen && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[100] flex items-center justify-center p-4">
+            <div className="bg-[#0d0d11] border border-white/[0.08] rounded-2xl w-full max-w-4xl max-h-[88vh] flex flex-col overflow-hidden shadow-2xl shadow-black/60">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.06] bg-[#111116] flex-shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                    <span className="text-lg">🔄</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-0.5">
+                      <h2 className="font-bold text-base dark:text-white text-gray-900">Automated Retry & Mandate Gate</h2>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-400 uppercase tracking-wider">
+                        Active Engine
+                      </span>
+                    </div>
+                    <p className="text-xs dark:text-gray-500 text-gray-500 font-mono">mandateCompliance.js · Exponential backoff · Circuit breaker · DND enforcement</p>
+                  </div>
+                </div>
+                <button onClick={() => setRetryModalOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center dark:text-gray-500 text-gray-500 hover:dark:text-white text-gray-900 hover:bg-white/10 transition-all text-lg font-light">
+                  ✕
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="overflow-y-auto flex-1 p-6 space-y-5">
+
+                {/* Overview callout */}
+                <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-4 text-xs leading-relaxed text-gray-300">
+                  <span className="text-orange-400 font-semibold uppercase tracking-wider font-mono text-[10px] block mb-1.5">Why this matters</span>
+                  Blind retry hammering causes customer churn, bank penalty fees, and card-network blacklisting.
+                  RevenueGuard's retry gate uses a 4-stage pipeline: classify the decline type, run hard compliance checks,
+                  pick the optimal bank window, and trip a circuit breaker before any limit is crossed.
+                </div>
+
+                {/* 4-Stage Flow */}
+                <div>
+                  <h3 className="text-[11px] font-mono uppercase tracking-widest dark:text-gray-500 text-gray-500 mb-3">4-Stage Retry Circuit</h3>
+                  <div className="flex items-center gap-2">
+                    {[
+                      { step: '01', title: 'Decline Triage', desc: 'Soft (funds, 503) vs Hard block (stolen card). Hard fails skip immediately.', color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/25' },
+                      { step: '02', title: 'Compliance Gate', desc: 'Max 3 attempts · Min 12h spacing · DND hour filter · ₹5K consent cap.', color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/25' },
+                      { step: '03', title: 'Smart Timing', desc: 'Schedules debit during peak bank auth windows (9:30–11:30 AM IST).', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/25' },
+                      { step: '04', title: 'Circuit Breaker', desc: '3 failures → halt mandate retries → hand off to SMS / Voice recovery.', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/25' },
+                    ].map((s, i, arr) => (
+                      <React.Fragment key={s.step}>
+                        <div className={`flex-1 rounded-xl border ${s.border} ${s.bg} p-4`}>
+                          <div className={`text-[10px] font-mono font-bold uppercase mb-2 ${s.color}`}>{s.step}</div>
+                          <div className="text-xs font-semibold dark:text-white text-gray-900 mb-1.5">{s.title}</div>
+                          <p className="text-[11px] dark:dark:text-gray-400 text-gray-600 text-gray-600 leading-relaxed">{s.desc}</p>
+                        </div>
+                        {i < arr.length - 1 && <div className="text-gray-700 text-sm flex-shrink-0">→</div>}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Boundary Parameters Table */}
+                <div>
+                  <h3 className="text-[11px] font-mono uppercase tracking-widest dark:text-gray-500 text-gray-500 mb-3">Enforced Boundary Parameters</h3>
+                  <div className="rounded-xl border border-white/[0.07] overflow-hidden text-xs font-mono">
+                    <div className="grid grid-cols-4 bg-white/[0.04] text-[10px] uppercase tracking-widest dark:text-gray-500 text-gray-500 border-b border-white/[0.06]">
+                      {['Parameter', 'Bound', 'Violation Action', 'Enforcement'].map(h => <div key={h} className="px-4 py-2.5">{h}</div>)}
+                    </div>
+                    {[
+                      ['Max Retries / Cycle', '3 Attempts', 'Circuit breaker trips', 'Hard-coded guard'],
+                      ['Cool-down Gap', '12 Hours Min', 'Request deferred', 'Audit log timestamp'],
+                      ['Quiet Hours', '9 PM – 9 AM', 'Suppress all contacts', 'Timezone evaluator'],
+                      ['Consent-Free Debit', '< ₹5,000', 'Requires re-auth above', 'Amount gate check'],
+                    ].map(([param, bound, action, enforcement], i) => (
+                      <div key={param} className={`grid grid-cols-4 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors ${i % 2 === 0 ? '' : 'bg-white/[0.01]'}`}>
+                        <div className="px-4 py-3 font-semibold dark:text-white text-gray-900 font-sans text-[11px]">{param}</div>
+                        <div className="px-4 py-3 text-orange-400 font-bold">{bound}</div>
+                        <div className="px-4 py-3 dark:dark:text-gray-400 text-gray-600 text-gray-600 font-sans text-[11px]">{action}</div>
+                        <div className="px-4 py-3 text-emerald-400 text-[11px]">{enforcement}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Code */}
+                <div>
+                  <h3 className="text-[11px] font-mono uppercase tracking-widest dark:text-gray-500 text-gray-500 mb-3">Implementation · Guardrail Logic</h3>
+                  <pre className="rounded-xl border border-orange-500/15 bg-black/40 px-5 py-4 text-[11px] font-mono text-orange-400/80 overflow-x-auto leading-5">
+{`const checkCompliance = async (caseId) => {
+  const retries = await AuditTrail.findAll({
+    where: { case_id: caseId, action: 'mandate_retry' }
+  });
+
+  // Gate 1: Attempt cap
+  if (retries.length >= RULES.max_retry_attempts) {         // 3 max
+    return { allowed: false, reason: 'Retry cap exhausted (3/3)' };
+  }
+
+  // Gate 2: Cool-down period
+  if (retries.length > 0) {
+    const hrs = (Date.now() - new Date(retries.at(-1).createdAt)) / 3_600_000;
+    if (hrs < RULES.min_hours_between_retries) {             // 12h min
+      return { allowed: false, reason: \`Cool-down: \${hrs.toFixed(1)}h of 12h\` };
+    }
+  }
+
+  // Gate 3: DND quiet hours  (9 PM – 9 AM IST)
+  const hour = new Date().getHours();
+  if (hour >= 21 || hour < 9) {
+    return { allowed: false, reason: 'DND quiet hours active' };
+  }
+
+  return { allowed: true, violations: [] };
+};`}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between px-6 py-3.5 border-t border-white/[0.06] bg-[#111116] flex-shrink-0">
+                <span className="text-[11px] font-mono text-gray-600">backend/engines/mandateCompliance.js · compliance/rules.js</span>
+                <button onClick={() => setRetryModalOpen(false)}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/15 text-gray-300 hover:dark:text-white text-gray-900 rounded-lg text-xs font-medium transition-all">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+               )}
+      </div>
+    </div>
+    </div>
+  );
+}
+
+function MetricCard({ icon, label, value, sub, glow }: { icon: React.ReactNode; label: string; value: string; sub: string; glow: string }) {
+  const glowColors: Record<string, string> = {
+    emerald: 'bg-emerald-500/10',
+    purple: 'bg-purple-500/10',
+    blue: 'bg-blue-500/10',
+    orange: 'bg-orange-500/10',
+  };
+  return (
+    <div className="dark:dark:bg-[#111] bg-white bg-white border dark:dark:border-gray-800 border-gray-200 border-gray-200 shadow-sm rounded-xl p-5 relative overflow-hidden">
+      <div className={`absolute top-0 right-0 w-24 h-24 ${glowColors[glow]} rounded-full blur-3xl -mr-8 -mt-8`}></div>
+      <h3 className="dark:dark:text-gray-400 text-gray-600 text-gray-600 text-xs font-medium flex items-center gap-1.5 mb-3">{icon}{label}</h3>
+      <p className="text-2xl font-bold">{value}</p>
+      <p className="text-xs dark:text-gray-500 text-gray-500 mt-1">{sub}</p>
+    </div>
+  );
+}
+

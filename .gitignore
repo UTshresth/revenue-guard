@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Environment secrets — NEVER commit this
+backend/.env
+frontend/.env
+frontend/.env.local
+.env
+.env.*
+!.env.example
+
+# Database (auto-generated)
+backend/*.sqlite
+backend/*.db
+
+# Build output
+frontend/.next/
+frontend/out/
+
+# Temp / debug scripts
+fix.js
+fix-*.js
+rename-*.js
+walkthrough.md
+
+# Backup files
+*.backup
+*_backup.tsx
+*_backup.ts
+*_backup.js
+
+# OS files
+.DS_Store
+Thumbs.db

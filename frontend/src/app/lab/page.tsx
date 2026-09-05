@@ -367,7 +367,7 @@ export default function RecoveryLabPage() {
                         </div>
                       )}
 
-                      {step && !done && <div className="mt-2 text-[11px] dark:text-gray-500 text-gray-500">{step.detail}</div>}
+
                     </div>
                   );
                 })}

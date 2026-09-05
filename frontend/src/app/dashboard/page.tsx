@@ -265,12 +265,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* High-Value Leakage (Top Unrecovered) */}
+        {/* High-Value Risk */}
         <div className="mt-6 bg-[#141414] border dark:border-[#222] border-gray-200 rounded-lg p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold dark:text-white text-gray-900 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-orange-400" />
-              High-Value Leakage (Top Unrecovered)
+              High-Value Risk
             </h2>
             <span className="text-[10px] font-mono dark:bg-gray-800 bg-gray-200 px-2 py-1 rounded">/api/high-value-leakage</span>
           </div>

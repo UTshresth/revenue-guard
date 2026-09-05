@@ -59,6 +59,7 @@ const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 import { Sidebar } from "@/components/Sidebar";
 export default function Dashboard() {
   const [stats, setStats] = useState<StatsData | null>(null);
+  const [leakage, setLeakage] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [runningAgent, setRunningAgent] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -66,9 +67,14 @@ export default function Dashboard() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch(`${API}/api/dashboard/stats`);
+      const [res, leakRes] = await Promise.all([
+        fetch(`${API}/api/dashboard/stats`),
+        fetch(`${API}/api/high-value-leakage`)
+      ]);
       const data = await res.json();
+      const leakData = await leakRes.json();
       setStats(data);
+      setLeakage(Array.isArray(leakData) ? leakData : []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -258,7 +264,48 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* High-Value Leakage (Top Unrecovered) */}
+        <div className="mt-6 bg-[#141414] border dark:border-[#222] border-gray-200 rounded-lg p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold dark:text-white text-gray-900 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-orange-400" />
+              High-Value Leakage (Top Unrecovered)
+            </h2>
+            <span className="text-[10px] font-mono dark:bg-gray-800 bg-gray-200 px-2 py-1 rounded">/api/high-value-leakage</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm dark:text-gray-400 text-gray-600">
+              <thead className="text-[10px] uppercase dark:bg-[#0A0A0A] bg-gray-50 text-gray-500 border-b dark:border-[#222] border-gray-200 font-mono">
+                <tr>
+                  <th className="px-5 py-3 font-medium">Case ID</th>
+                  <th className="px-5 py-3 font-medium">Customer</th>
+                  <th className="px-5 py-3 font-medium">Type</th>
+                  <th className="px-5 py-3 font-medium text-right">Amount at Risk</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#222]">
+                {leakage.length === 0 ? (
+                  <tr><td colSpan={4} className="p-8 text-center text-gray-600 text-xs">No open leakage found.</td></tr>
+                ) : (
+                  leakage.map((l: any) => (
+                    <tr key={l.id} className="hover:bg-[#1A1A1A] transition-colors">
+                      <td className="px-5 py-3 text-xs font-mono">{l.id}</td>
+                      <td className="px-5 py-3 text-sm dark:text-gray-300 text-gray-700">{l.customer_name || 'Unknown'}</td>
+                      <td className="px-5 py-3 text-xs">
+                        <span className="px-2 py-1 rounded bg-gray-500/10 border border-gray-500/20">{l.type.replace(/_/g, ' ')}</span>
+                      </td>
+                      <td className="px-5 py-3 text-right font-mono text-orange-400 font-medium">
+                        ₹{(l.amount_at_risk / 100).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ─── Modals ─── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Recovery Cases */}

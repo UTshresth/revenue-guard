@@ -16,6 +16,7 @@ interface AuditEntry {
   payment_link_id: string | null;
   payment_link_url: string | null;
   is_violation: boolean;
+  cryptographic_signature: string | null;
   createdAt: string;
 }
 
@@ -109,7 +110,14 @@ export default function AuditPage() {
                     <a href={a.payment_link_url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1">
                       {a.payment_link_url} <ExternalLink className="w-3 h-3" />
                     </a>
-                    <span className="text-xs text-gray-600 font-mono">({a.payment_link_id})</span>
+                  </div>
+                )}
+                
+                {a.cryptographic_signature && (
+                  <div className="mt-3 flex items-center gap-2 pt-2 border-t dark:border-white/[0.05] border-gray-100">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 opacity-70" />
+                    <span className="text-[10px] font-mono text-emerald-500/70 tracking-widest uppercase">SHA-256 SEAL</span>
+                    <span className="text-[10px] font-mono dark:text-gray-600 text-gray-400 truncate max-w-md">{a.cryptographic_signature}</span>
                   </div>
                 )}
               </div>
@@ -117,7 +125,6 @@ export default function AuditPage() {
           </div>
         )}
       </main>
-    </div>
-</div>
+    </div></div>
   );
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { ShieldCheck, ArrowRight, Activity, Cpu, Lock, PhoneCall, BarChart3, FlaskConical, Webhook, Server, BrainCircuit, Globe, MessageSquare } from 'lucide-react';
+import { ShieldCheck, ArrowRight, Activity, Cpu, Lock, PhoneCall, BarChart3, FlaskConical, Webhook, Server, BrainCircuit, Globe, MessageSquare, Shield, Database } from 'lucide-react';
 
 
 export default function ExplorePage() {
@@ -85,100 +85,99 @@ export default function ExplorePage() {
 
           <div className="dark:bg-[#111] bg-white border dark:border-gray-800 border-gray-200 rounded-2xl p-8 md:p-12 overflow-x-auto shadow-sm">
             {/* Diagram Container */}
-            <div className="min-w-[800px] flex flex-col items-center gap-8">
+            <div className="min-w-[800px] flex flex-col items-center gap-6">
               
               {/* Row 1: Trigger */}
               <div className="flex flex-col items-center">
                 <div className="w-64 bg-blue-100 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/40 rounded-lg p-4 text-center shadow-sm relative">
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 dark:bg-[#111] bg-white px-2 text-xs font-bold text-blue-500 dark:text-blue-400 uppercase tracking-widest">Trigger</div>
-                  <Webhook className="w-8 h-8 text-blue-500 dark:text-blue-400 mx-auto mb-2" />
-                  <h4 className="font-semibold dark:text-gray-200 text-gray-800">Razorpay Webhooks</h4>
-                  <p className="text-xs dark:dark:text-gray-400 text-gray-600 dark:text-gray-500 text-gray-500 mt-1">payment.failed, invoice.expired</p>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 dark:bg-[#111] bg-white px-2 text-[10px] font-bold text-blue-500 dark:text-blue-400 uppercase tracking-widest">Live Integration</div>
+                  <Webhook className="w-6 h-6 text-blue-500 dark:text-blue-400 mx-auto mb-2" />
+                  <h4 className="text-sm font-semibold dark:text-gray-200 text-gray-800">Razorpay Webhooks</h4>
+                  <p className="text-[10px] dark:text-gray-500 text-gray-500 mt-1">payment.failed, invoice.expired</p>
                 </div>
-                {/* Arrow Down */}
-                <div className="h-10 border-l-2 border-dashed dark:border-gray-600 border-gray-300 my-2 relative">
+                <div className="h-6 border-l-2 border-dashed dark:border-gray-600 border-gray-300 my-1 relative">
                   <div className="absolute -bottom-2 left-[-6px] border-solid border-t-8 dark:border-t-gray-600 border-t-gray-300 border-x-4 border-x-transparent"></div>
                 </div>
               </div>
 
-              {/* Row 2: Core Processing */}
-              <div className="flex flex-col items-center w-full">
-                <div className="w-[600px] dark:bg-gray-900 bg-gray-50 border dark:border-gray-700 border-gray-200 rounded-lg p-6 text-center shadow-md relative">
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 dark:bg-[#111] bg-white px-2 text-xs font-bold dark:dark:text-gray-400 text-gray-600 dark:text-gray-500 text-gray-500 uppercase tracking-widest">Backend Processing</div>
-                  <div className="flex justify-around items-center">
-                    <div className="flex flex-col items-center">
-                      <Server className="w-6 h-6 dark:text-gray-300 text-gray-600 mb-2" />
-                      <span className="text-sm font-medium">Node.js Server</span>
-                    </div>
-                    <div className="dark:dark:text-gray-500 text-gray-500 dark:text-gray-400 text-gray-600 font-mono text-sm">→ Validates & stores →</div>
-                    <div className="flex flex-col items-center">
-                      <div className="w-6 h-6 dark:text-gray-300 text-gray-600 mb-2 flex items-center justify-center font-bold font-serif">SQL</div>
-                      <span className="text-sm font-medium">SQLite Database</span>
-                    </div>
-                  </div>
+              {/* Row 2: Orchestration (Groq AI) */}
+              <div className="flex flex-col items-center w-full relative">
+                <div className="w-[450px] bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-200 dark:border-indigo-500/50 rounded-xl p-5 text-center shadow-md relative z-10">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 dark:bg-[#111] bg-white px-2 text-[10px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">AI Brain</div>
+                  <BrainCircuit className="w-8 h-8 text-indigo-500 dark:text-indigo-400 mx-auto mb-2" />
+                  <h4 className="text-sm font-bold dark:text-gray-200 text-gray-800">Groq LLM (Compound-Mini)</h4>
+                  <p className="text-[11px] dark:text-gray-400 text-gray-600 mt-1.5 leading-relaxed">
+                    Diagnoses failure root-cause and selects optimal recovery channel (Voice, SMS, Telegram). Generates dynamic discount incentives if needed.
+                  </p>
                 </div>
-                {/* Arrow Down */}
-                <div className="h-10 border-l-2 border-solid border-blue-500 my-2 relative">
-                  <div className="absolute -bottom-2 left-[-6px] border-solid border-t-8 border-t-blue-500 border-x-4 border-x-transparent"></div>
+                <div className="h-6 border-l-2 border-solid border-indigo-500/50 my-1 relative">
+                  <div className="absolute -bottom-2 left-[-6px] border-solid border-t-8 border-t-indigo-500/50 border-x-4 border-x-transparent"></div>
                 </div>
               </div>
 
-              {/* Row 3: AI Brain (Diamond-ish) */}
-              <div className="flex flex-col items-center w-full relative">
-                <div className="w-[400px] bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-200 dark:border-indigo-500/50 rounded-xl p-6 text-center shadow-md relative z-10">
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 dark:bg-[#111] bg-white px-2 text-xs font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">Orchestration</div>
-                  <BrainCircuit className="w-10 h-10 text-indigo-500 dark:text-indigo-400 mx-auto mb-3" />
-                  <h4 className="font-bold dark:text-gray-200 text-gray-800 text-lg">AI Decision Engine (Groq)</h4>
-                  <p className="text-xs dark:text-gray-400 text-gray-600 mt-2 leading-relaxed">
-                    Analyzes customer history and payment context to select the optimal recovery channel and generate personalized scripts/messages.
-                  </p>
+              {/* Row 3: Compliance Gate */}
+              <div className="flex flex-col items-center w-[600px]">
+                <div className="w-full bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-500/50 rounded-lg py-4 px-6 text-center text-sm font-medium flex flex-col items-center gap-2 relative">
+                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 dark:bg-[#111] bg-white px-2 text-[10px] font-bold text-amber-500 uppercase tracking-widest">Guardrails</div>
+                  <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-semibold mb-1">
+                    <Lock className="w-4 h-4" /> Compliance & EV Gate
+                  </div>
+                  <div className="flex gap-4 text-[11px] font-mono text-gray-600 dark:text-gray-400">
+                    <span>1. Margin-Aware Check (EV &gt; Cost)</span>
+                    <span>2. TRAI DND</span>
+                    <span>3. Frequency Cap</span>
+                  </div>
+                </div>
+                <div className="h-6 border-l-2 border-solid border-amber-500/50 my-1 relative">
+                  <div className="absolute -bottom-2 left-[-6px] border-solid border-t-8 border-t-amber-500/50 border-x-4 border-x-transparent"></div>
+                </div>
+              </div>
+
+              {/* Row 4: Outbox */}
+              <div className="flex flex-col items-center w-full">
+                <div className="w-80 dark:bg-emerald-900/10 bg-emerald-50 border dark:border-emerald-700/50 border-emerald-200 rounded-lg p-3 text-center shadow-sm relative">
+                  <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
+                    <Database className="w-4 h-4" /> Fault-Tolerant Outbox
+                  </div>
+                  <p className="text-[10px] dark:text-gray-500 text-gray-500 mt-1">Crash-safe dispatch with idempotency key</p>
                 </div>
                 {/* Split Arrows */}
-                <div className="w-[500px] h-12 border-t-2 border-l-2 border-r-2 border-solid dark:border-gray-600 border-gray-300 mt-2 relative rounded-t-lg">
+                <div className="w-[500px] h-6 border-t-2 border-l-2 border-r-2 border-solid dark:border-gray-600 border-gray-300 mt-1 relative rounded-t-lg">
                   {/* Left Arrow */}
                   <div className="absolute -bottom-2 -left-[6px] border-solid border-t-8 dark:border-t-gray-600 border-t-gray-300 border-x-4 border-x-transparent"></div>
-                  {/* Middle Arrow */}
-                  <div className="absolute h-12 border-l-2 border-solid dark:border-gray-600 border-gray-300 left-1/2 top-0">
-                    <div className="absolute -bottom-2 left-[-6px] border-solid border-t-8 dark:border-t-gray-600 border-t-gray-300 border-x-4 border-x-transparent"></div>
-                  </div>
                   {/* Right Arrow */}
                   <div className="absolute -bottom-2 -right-[6px] border-solid border-t-8 dark:border-t-gray-600 border-t-gray-300 border-x-4 border-x-transparent"></div>
                 </div>
               </div>
 
-              {/* Row 4: Compliance Layer */}
-              <div className="flex justify-between w-[700px] mt-2">
-                <div className="w-full bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-500/30 rounded-lg py-3 px-6 text-center text-sm font-medium text-amber-600 dark:text-amber-300 flex items-center justify-center gap-2">
-                  <Lock className="w-4 h-4" /> Compliance Layer: Checks DND hours, retry limits, and active opt-outs before execution
-                </div>
-              </div>
-              
-              <div className="w-[500px] h-6 border-l-2 border-r-2 border-solid dark:border-gray-600 border-gray-300 relative">
-                 <div className="absolute h-6 border-l-2 border-solid dark:border-gray-600 border-gray-300 left-1/2 top-0"></div>
-              </div>
-
               {/* Row 5: Execution Channels */}
-              <div className="flex justify-between w-[600px]">
+              <div className="flex justify-between w-[600px] mt-2">
                 {/* Channel 1 */}
-                <div className="w-40 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-500/40 rounded-lg p-4 text-center">
-                  <PhoneCall className="w-6 h-6 text-purple-500 dark:text-purple-400 mx-auto mb-2" />
-                  <h4 className="text-sm font-semibold dark:text-gray-200 text-gray-800">Voice Calling</h4>
-                  <p className="text-[10px] dark:dark:text-gray-500 text-gray-500 dark:text-gray-500 text-gray-500 mt-1">Twilio TTS API</p>
+                <div className="w-48 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-500/40 rounded-lg p-4 text-center">
+                  <PhoneCall className="w-5 h-5 text-purple-500 dark:text-purple-400 mx-auto mb-2" />
+                  <h4 className="text-xs font-semibold dark:text-gray-200 text-gray-800">Voice Negotiation</h4>
+                  <p className="text-[10px] dark:text-gray-500 text-gray-500 mt-1">Twilio TTS API</p>
                 </div>
                 {/* Channel 2 */}
-                <div className="w-40 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-500/40 rounded-lg p-4 text-center">
-                  <MessageSquare className="w-6 h-6 text-emerald-500 dark:text-emerald-400 mx-auto mb-2" />
-                  <h4 className="text-sm font-semibold dark:text-gray-200 text-gray-800">AI Chat Bot</h4>
-                  <p className="text-[10px] dark:dark:text-gray-500 text-gray-500 dark:text-gray-500 text-gray-500 mt-1">Interactive Negotiator</p>
-                </div>
-                {/* Channel 3 */}
-                <div className="w-40 bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-500/40 rounded-lg p-4 text-center">
-                  <Globe className="w-6 h-6 text-cyan-500 dark:text-cyan-400 mx-auto mb-2" />
-                  <h4 className="text-sm font-semibold dark:text-gray-200 text-gray-800">Async Messaging</h4>
-                  <p className="text-[10px] dark:dark:text-gray-500 text-gray-500 dark:text-gray-500 text-gray-500 mt-1">Telegram & SMS</p>
+                <div className="w-48 bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-500/40 rounded-lg p-4 text-center">
+                  <MessageSquare className="w-5 h-5 text-cyan-500 dark:text-cyan-400 mx-auto mb-2" />
+                  <h4 className="text-xs font-semibold dark:text-gray-200 text-gray-800">Telegram Bot</h4>
+                  <p className="text-[10px] dark:text-gray-500 text-gray-500 mt-1">Interactive PTP Ledger</p>
                 </div>
               </div>
 
+              {/* Row 6: Audit Seal */}
+              <div className="flex flex-col items-center w-full mt-2">
+                <div className="h-6 border-l-2 border-dashed border-gray-500 relative">
+                  <div className="absolute -bottom-2 left-[-6px] border-solid border-t-8 border-t-gray-500 border-x-4 border-x-transparent"></div>
+                </div>
+                <div className="w-[500px] dark:bg-[#0A0A0A] bg-gray-100 border dark:border-[#222] border-gray-300 rounded-lg p-4 text-center mt-1 relative">
+                  <div className="flex items-center justify-center gap-2 text-gray-800 dark:text-gray-300 font-semibold text-sm">
+                    <Shield className="w-4 h-4 text-emerald-400" /> Tamper-Evident Ledger
+                  </div>
+                  <p className="text-[10px] dark:text-gray-500 text-gray-500 mt-1 font-mono text-emerald-500/70">SHA-256 Cryptographic Seal (AuditTrail table)</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

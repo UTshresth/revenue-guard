@@ -118,7 +118,7 @@ export default function ExplorePage() {
     E2 & E3 -.->|Customer Requests Time| L[Future Payment Ledger\\nTime-locked Grace Period]
     L -.->|Broken Promise| B
     
-    K -->|Payment Captured| M[State Machine\\nStatus: SECURED]
+    K -->|Payment Captured| M[Recovery Tracker\\nStatus: SECURED]
     
     G & J & L & M --> N[(Immutable Audit Log)]
 

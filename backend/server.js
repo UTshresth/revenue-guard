@@ -127,6 +127,20 @@ app.get('/api/dashboard/stats', async (req, res) => {
   }
 });
 
+// High-Value Leakage (Top 10 Unrecovered)
+app.get('/api/high-value-leakage', async (req, res) => {
+  try {
+    const unrecovered = await Case.findAll({
+      where: { status: 'open' },
+      order: [['amount_at_risk', 'DESC']],
+      limit: 10
+    });
+    res.json(unrecovered);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch leakage data' });
+  }
+});
+
 // ──────────────────────────────────
 // Audit Trail API
 // ──────────────────────────────────

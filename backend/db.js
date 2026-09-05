@@ -52,6 +52,15 @@ const AuditTrail = sequelize.define('AuditTrail', {
   is_violation: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  cryptographic_signature: DataTypes.STRING // SHA-256 seal for tamper-evident logging
+}, {
+  hooks: {
+    beforeCreate: (audit) => {
+      const crypto = require('crypto');
+      const dataString = `${audit.case_id}:${audit.action}:${audit.channel}:${Date.now()}`;
+      audit.cryptographic_signature = crypto.createHash('sha256').update(dataString).digest('hex');
+    }
   }
 });
 

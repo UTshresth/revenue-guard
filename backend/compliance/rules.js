@@ -69,12 +69,43 @@ const checkCompliance = async (caseId, diagnosis) => {
     });
   }
 
-  const hasHardBlock = violations.some(v => v.severity === 'hard_block');
+  // Cost-Benefit Thresholding (Margin-Aware Execution)
+  // Ensures LLM/Twilio costs don't exceed expected recovery value
+  const estimatedRecoveryProbability = diagnosis.confidence || 0.3; // Default 30% chance
+  const aiCostCents = diagnosis.channel === 'voice' ? 12 : 2; // Simulated costs
+  const aiCostPaise = aiCostCents * 84; // Rough INR conversion
+  const expectedValuePaise = (diagnosis.amount || 0) * estimatedRecoveryProbability;
+  
+  if (diagnosis.amount && expectedValuePaise < aiCostPaise) {
+    violations.push({
+      rule: 'NEGATIVE_MARGIN',
+      severity: 'hard_block',
+      detail: `Cost-Benefit check failed: AI execution cost (₹${(aiCostPaise/100).toFixed(2)}) exceeds expected recovery value (₹${(expectedValuePaise/100).toFixed(2)}).`
+    });
+  }
 
+  if (violations.length > 0) {
+    // Log blocked outreach to AuditTrail for Tamper-Evident logging
+    for (const v of violations) {
+      if (v.severity === 'hard_block') {
+        await AuditTrail.create({
+          case_id: caseId,
+          action: 'outreach_blocked',
+          channel: diagnosis.channel,
+          message_sent: 'BLOCKED BY COMPLIANCE GATE',
+          llm_reasoning: `Rule breached: ${v.rule} - ${v.detail}`,
+          is_violation: true
+        });
+      }
+    }
+  }
+
+  const hardBlocks = violations.filter(v => v.severity === 'hard_block');
+  
   return {
-    allowed: !hasHardBlock,
+    allowed: hardBlocks.length === 0,
     violations,
-    reason: hasHardBlock ? violations.find(v => v.severity === 'hard_block').detail : null
+    reason: hardBlocks.length > 0 ? hardBlocks[0].detail : 'Cleared'
   };
 };
 

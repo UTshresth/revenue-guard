@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShieldCheck, BarChart3, Cpu, FlaskConical, PhoneCall, ShieldCheck as AuditIcon, Settings } from 'lucide-react';
+import { ShieldCheck, BarChart3, Cpu, FlaskConical, PhoneCall, ShieldCheck as AuditIcon, Settings, Rocket } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
 
 export function Sidebar() {
@@ -11,6 +11,7 @@ export function Sidebar() {
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
     { name: 'Negotiator', href: '/negotiate', icon: Cpu },
     { name: 'Demonstration', href: '/lab', icon: FlaskConical },
+    { name: 'Live Demo', href: '/demo', icon: Rocket },
     { name: 'Voice', href: '/voice', icon: PhoneCall },
     { name: 'Audit', href: '/audit', icon: AuditIcon },
   ];

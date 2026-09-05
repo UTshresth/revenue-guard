@@ -90,37 +90,37 @@ export default function ExplorePage() {
             {/* Diagram Container */}
             <div className="w-full flex justify-center">
               <Mermaid chart={`flowchart TD
-    A[Live Razorpay Webhooks\\n& API Sync] --> B[Event Triage Router]
+    A[Live Razorpay Webhooks\\n& API Sync] --> B[Event Classifier]
     
-    B --> B1[Checkout Drop-off Engine]
-    B --> B2[Overdue Invoice Engine]
-    B --> B3[Mandate & Subscription Engine]
+    B --> B1[Cart Abandonment Worker]
+    B --> B2[Invoice Recovery Worker]
+    B --> B3[Subscription Rescue Worker]
     
-    B1 & B2 & B3 --> C{Groq LLM Agent\\nCompound-Mini}
+    B1 & B2 & B3 --> C{Groq Intelligence Core\\nContext Analyzer}
     
-    C -->|Diagnoses Failure & Generates Strategy| D[Channel Selector]
+    C -->|Diagnoses Failure & Generates Strategy| D[Communication Router]
     
-    D -->|Low Value / Standard| E1[SMS Dispatcher]
-    D -->|High Value / Complex| E2[Telegram Bot\\nInteractive Negotiation]
-    D -->|Critical / B2B| E3[Twilio Voice Agent\\nHinglish Live Call]
+    D -->|Low Value / Standard| E1[SMS Broadcaster]
+    D -->|High Value / Complex| E2[Telegram Bot\\nInteractive Chat]
+    D -->|Critical / B2B| E3[Twilio Voice Agent\\nHinglish Negotiation]
     
-    E1 & E2 & E3 --> F{Compliance & EV Gate}
+    E1 & E2 & E3 --> F{Policy & Margin Gate}
     
-    F -->|Cost > Expected Value\\nOr TRAI DND Active| G[REJECTED\\nNegative Margin Block]
-    F -->|Passes Math & Rules| H[Fault-Tolerant Outbox\\nIdempotency Key]
+    F -->|Cost > Expected Value\\nOr TRAI DND Active| G[BLOCKED\\nNegative ROI Prevented]
+    F -->|Passes Math & Rules| H[Resilient Execution Queue\\nIdempotent Write]
     
-    H --> I[Dispatcher Worker]
+    H --> I[Action Processor]
     I --> J[Razorpay API\\nGenerate Payment Link]
     
     J --> K[Customer Receives Link]
     
     %% Interactive Feedback Loop
-    E2 & E3 -.->|Customer Requests Time| L[Promise-To-Pay Ledger\\nTime-locked Grace Period]
+    E2 & E3 -.->|Customer Requests Time| L[Future Payment Ledger\\nTime-locked Grace Period]
     L -.->|Broken Promise| B
     
-    K -->|Payment Captured| M[State Machine\\nStatus: RECOVERED]
+    K -->|Payment Captured| M[State Machine\\nStatus: SECURED]
     
-    G & J & L & M --> N[(Cryptographic Audit Trail\\nSHA-256 Tamper-Evident Seal)]
+    G & J & L & M --> N[(Immutable Audit Log\\nSHA-256 Crypto Hash)]
 
     style A fill:#1a1a2e,stroke:#3b82f6,stroke-width:2px,color:#fff
     style C fill:#2d1b4e,stroke:#8b5cf6,stroke-width:2px,color:#fff

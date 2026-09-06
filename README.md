@@ -20,7 +20,7 @@ RevenueGuard is a highly sophisticated, AI-driven recovery system designed to au
 | **🧠 Margin & EV Predictor** | Calculates the Expected Value (ROI) before attempting recovery to prevent negative profit margins. | Uses an ML Neural Network trained on thousands of historical recoveries to predict success probabilities and choose the optimal channel. |
 | **📞 Multi-Channel Negotiation** | Reaches out to customers dynamically on the optimal channel based on friction and transaction value. | Integrates **Twilio Voice AI** for high-value complex calls, **Telegram Bots** for interactive chat, and **SMS** for standard alerts. |
 | **🛑 Policy & Compliance Gate** | Ensures strict regulatory compliance (e.g. TRAI) and mathematical profitability. | Blocks actions if TRAI DND is active, if the attempt is outside allowed hours, or if the communication API cost exceeds the Expected Value. |
-| **🛡️ Resilient Execution Queue** | Guarantees that actions are executed reliably, exactly once, preventing double-billing. | Implements the **Transactional Outbox Pattern** with Idempotency Keys in a SQLite database to survive system crashes. |
+| **🛡️ Resilient Execution Queue** | Guarantees that actions are executed reliably, exactly once, preventing double-billing. | Implements an **Idempotent Write-Ahead Log** with Idempotency Keys in a SQLite database to survive system crashes. |
 
 ---
 
@@ -43,8 +43,8 @@ The system dynamically selects the cheapest, most effective channel to recover t
 *   **Telegram Bot:** Used for interactive, mid-value B2C negotiations where the customer might need to select an alternative payment method.
 *   **Standard SMS:** Used for low-friction, low-value drop-offs (e.g., quick cart abandonment).
 
-### 🛡️ 5. Resilient Execution (Outbox Pattern)
-Financial systems cannot afford to double-charge customers or drop events during server restarts. RevenueGuard implements a robust **Transactional Outbox Pattern**. Actions are securely written to the database with a unique `idempotency_key` before they are executed. If the server crashes mid-process, the Dispatcher Worker automatically resumes pending actions without duplicating messages.
+### 🛡️ 5. Resilient Execution (Write-Ahead Log)
+Financial systems cannot afford to double-charge customers or drop events during server restarts. RevenueGuard implements a robust **Idempotent Write-Ahead Log (WAL)**. Actions are securely written to the database with a unique `idempotency_key` before they are executed. If the server crashes mid-process, the Dispatcher Worker automatically resumes pending actions without duplicating messages.
 
 ---
 

@@ -7,7 +7,7 @@
 
 **Live Demo:** [https://revenue-gurad-gamma-one-78.vercel.app/](https://revenue-gurad-gamma-one-78.vercel.app/)
 
-RevenueGuard is a highly sophisticated, AI-driven recovery system designed to autonomously rescue failed payments, abandoned carts, and overdue invoices. Unlike standard retry scripts that blindly spam customers, RevenueGuard acts as an **Intelligent Recovery Agent**. It evaluates the Expected Value (EV) of every failed transaction, negotiates dynamically across multiple communication channels (Voice, Telegram, SMS), and logs every decision into a cryptographically secure, tamper-proof Audit Trail.
+RevenueGuard is a highly sophisticated, AI-driven recovery system designed to autonomously rescue failed payments, abandoned carts, and overdue invoices. Unlike standard retry scripts that blindly spam customers, RevenueGuard acts as an **Intelligent Recovery Agent**. It evaluates the Net Recovery Yield (NRY) of every failed transaction, negotiates dynamically across multiple communication channels (Voice, Telegram, SMS), and logs every decision into a cryptographically secure, tamper-proof Audit Trail.
 
 ---
 
@@ -16,10 +16,10 @@ RevenueGuard is a highly sophisticated, AI-driven recovery system designed to au
 | Component | Description | Technical Implementation |
 |-----------|-------------|--------------------------|
 | **🤖 Groq Intelligence Core (Recovery Agent)** | Context-aware LLM router that diagnoses *why* a payment failed and dynamically negotiates recovery. | Leverages Groq's high-speed inference to analyze Razorpay webhooks and generate localized, conversational payloads (e.g., Hinglish for Voice calls). |
-| **🔒 Immutable Audit Trail** | Tamper-evident system of record for every AI decision, compliance check, and generated Razorpay link. | Hashes every automated action with **SHA-256 Cryptography** to ensure strict regulatory compliance and traceability. |
-| **🧠 Margin & EV Predictor** | Calculates the Expected Value (ROI) before attempting recovery to prevent negative profit margins. | Uses an ML Neural Network trained on thousands of historical recoveries to predict success probabilities and choose the optimal channel. |
+| **🔒 Immutable Audit Trail** | Tamper-evident system of record for every AI decision, compliance check, and generated Razorpay link. | Secures every automated action with a **Zero-Trust Cryptographic Seal** to ensure strict regulatory compliance and traceability. |
+| **🧠 Margin & NRY Predictor** | Calculates the Net Recovery Yield (NRY) before attempting recovery to prevent negative profit margins. | Uses an ML Neural Network trained on thousands of historical recoveries to predict success probabilities and choose the optimal channel. |
 | **📞 Multi-Channel Negotiation** | Reaches out to customers dynamically on the optimal channel based on friction and transaction value. | Integrates **Twilio Voice AI** for high-value complex calls, **Telegram Bots** for interactive chat, and **SMS** for standard alerts. |
-| **🛑 Policy & Compliance Gate** | Ensures strict regulatory compliance (e.g. TRAI) and mathematical profitability. | Blocks actions if TRAI DND is active, if the attempt is outside allowed hours, or if the communication API cost exceeds the Expected Value. |
+| **🛑 Policy & Compliance Gate** | Ensures strict regulatory compliance (e.g. TRAI) and mathematical profitability. | Blocks actions if TRAI DND is active, if the attempt is outside allowed hours, or if the communication API cost exceeds the Net Recovery Yield. |
 | **🛡️ Resilient Execution Queue** | Guarantees that actions are executed reliably, exactly once, preventing double-billing. | Implements an **Idempotent Write-Ahead Log** with Idempotency Keys in a SQLite database to survive system crashes. |
 
 ---
@@ -29,12 +29,12 @@ RevenueGuard is a highly sophisticated, AI-driven recovery system designed to au
 ### 🤖 1. The Autonomous Recovery Agent (Groq Intelligence Core)
 At the heart of RevenueGuard is an autonomous agent powered by Groq's lightning-fast LLM inference. When a Razorpay webhook fires for a failed payment, the agent intercepts the payload, analyzes the root cause (e.g., Insufficient Funds vs. Network Timeout), and formulates a highly personalized recovery strategy. It doesn't just send a link; it *negotiates*. If a customer needs time, it sets up a "Time-locked Grace Period" (Future Payment Ledger) and follows up automatically.
 
-### 🔒 2. The Immutable Audit Trail (SHA-256)
-When AI is handling money, trust and transparency are paramount. Every single decision made by the Recovery Agent—whether it's generating a new Razorpay link, sending an SMS, or blocking an action due to compliance—is recorded into our Audit Ledger. Each entry is sealed with a **SHA-256 Cryptographic Hash**. This ensures that the history of automated financial interactions is tamper-proof and fully compliant with financial regulations. 
+### 🔒 2. The Immutable Audit Trail (Zero-Trust Seal)
+When AI is handling money, trust and transparency are paramount. Every single decision made by the Recovery Agent—whether it's generating a new Razorpay link, sending an SMS, or blocking an action due to compliance—is recorded into our Audit Ledger. Each entry is secured with a **Zero-Trust Cryptographic Seal**. This ensures that the history of automated financial interactions is tamper-proof and fully compliant with financial regulations. 
 
-### 🧠 3. Margin-Aware ML Predictor (Expected Value)
-Blindly calling every failed transaction is expensive. RevenueGuard features a lightweight Neural Network that predicts the exact Expected Value (EV) of a recovery attempt before it happens. 
-- It calculates: `EV = (Probability of Recovery × Transaction Amount) - API Cost of Channel`
+### 🧠 3. Margin-Aware ML Predictor (Net Recovery Yield)
+Blindly calling every failed transaction is expensive. RevenueGuard features a lightweight Neural Network that predicts the exact Net Recovery Yield (NRY) of a recovery attempt before it happens. 
+- It calculates: `NRY = (Probability of Recovery × Transaction Amount) - API Cost of Channel`
 - If a failed payment is only worth ₹50, but a Twilio Voice call costs ₹15 with a low chance of success, the ML Predictor **blocks** the action, saving the merchant money and protecting their margins.
 
 ### 📞 4. Multi-Channel Routing
@@ -48,51 +48,31 @@ Financial systems cannot afford to double-charge customers or drop events during
 
 ---
 
-## 🏗️ System Architecture Flowchart
+## 🏗️ System Execution Pipeline
 
-The following diagram illustrates the complete, fault-tolerant lifecycle of a failed Razorpay event processed by RevenueGuard:
+The following pipeline illustrates the complete, fault-tolerant lifecycle of a failed Razorpay event processed by RevenueGuard:
 
-```mermaid
-flowchart TD
-    A[Live Razorpay Webhooks\n& API Sync] --> B[Event Classifier]
-    
-    B --> B1[Cart Abandonment Worker]
-    B --> B2[Invoice Recovery Worker]
-    B --> B3[Subscription Rescue Worker]
-    
-    B1 & B2 & B3 --> C{Groq Intelligence Core\nContext Analyzer}
-    
-    C -->|Diagnoses Failure & Generates Strategy| D[Communication Router]
-    
-    D -->|Low Value / Standard| E1[SMS Broadcaster]
-    D -->|High Value / Complex| E2[Telegram Bot\nInteractive Chat]
-    D -->|Critical / B2B| E3[Twilio Voice Agent\nHinglish Negotiation]
-    
-    E1 & E2 & E3 --> F{Policy & Margin Gate}
-    
-    F -->|Cost > Expected Value\nOr TRAI DND Active| G[BLOCKED\nNegative ROI Prevented]
-    F -->|Passes Math & Rules| H[Resilient Execution Queue\nIdempotent Write]
-    
-    H --> I[Action Processor]
-    I --> J[Razorpay API\nGenerate Payment Link]
-    
-    J --> K[Customer Receives Link]
-    
-    %% Interactive Feedback Loop
-    E2 & E3 -.->|Customer Requests Time| L[Future Payment Ledger\nTime-locked Grace Period]
-    L -.->|Broken Promise| B
-    
-    K -->|Payment Captured| M[Recovery Tracker\nStatus: SECURED]
-    
-    G & J & L & M --> N[(Immutable Audit Log)]
+> **Step 1: Webhook Ingestion & Event Classification**  
+> `Razorpay API` ⚡️ `Event Classifier` ➡️ Distributes to `Cart Abandonment`, `Invoice Recovery`, or `Subscription Rescue` workers.
 
-    style A fill:#1a1a2e,stroke:#3b82f6,stroke-width:2px,color:#fff
-    style C fill:#2d1b4e,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    style F fill:#4a1c1c,stroke:#ef4444,stroke-width:2px,color:#fff
-    style H fill:#113220,stroke:#10b981,stroke-width:2px,color:#fff
-    style N fill:#1a202c,stroke:#10b981,stroke-width:2px,color:#fff
-    style L fill:#4a3f1c,stroke:#eab308,stroke-width:2px,color:#fff
-```
+> **Step 2: Context Analysis & Decision**  
+> `Workers` ➡️ 🧠 `Groq Intelligence Core` ➡️ Determines optimal recovery strategy.
+
+> **Step 3: Margin & Yield Prediction**  
+> `Groq Core` ➡️ 📊 `Margin & NRY Predictor` ➡️ Checks if `Cost > Net Recovery Yield`.  
+> - ❌ **Negative Yield:** Action Blocked.  
+> - ✅ **Positive Yield:** Action Approved.
+
+> **Step 4: Resilient Execution**  
+> `Approved Actions` ➡️ 🛡️ `Idempotent Write-Ahead Log` ➡️ `Action Processor` ➡️ `Communication Router` (Twilio Voice / Telegram / SMS).
+
+> **Step 5: Customer Interaction & Verification**  
+> `Communication Router` 💬 `Customer` ➡️ Customer agrees to pay / requests more time.  
+> - 🕒 **Requests Time:** Saved to `Future Payment Ledger`.  
+> - 💳 **Pays:** `Recovery Tracker` marks payment as SECURED.
+
+> **Step 6: Immutable Auditing**  
+> All actions and states are finalized and permanently recorded in the 🔒 **Zero-Trust Audit Ledger**.
 
 ---
 

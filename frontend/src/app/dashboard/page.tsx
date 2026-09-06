@@ -124,7 +124,7 @@ export default function Dashboard() {
   const [ptpModalOpen, setPtpModalOpen] = useState(false);
   const [retryModalOpen, setRetryModalOpen] = useState(false);
   const [complianceModalOpen, setComplianceModalOpen] = useState(false);
-  const [mlParams, setMlParams] = useState({ mobile: 1, night: 0, highAmount: 1, slowNetwork: 0 });
+  const [mlParams, setMlParams] = useState<any>({ actualAmount: 5000, amount: 0.1, friction: 0.5, highValue: 0, timeDelay: 0.2 });
   const [mlResult, setMlResult] = useState<any>(null);
   const [testingMl, setTestingMl] = useState(false);
 
@@ -545,51 +545,49 @@ export default function Dashboard() {
         {/* ML Prediction Modal */}
         {mlModalOpen && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-            <div className="dark:dark:bg-[#111] bg-white bg-white border dark:dark:border-gray-800 border-gray-200 border-gray-200 shadow-sm rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <div className="dark:bg-[#111] bg-white border dark:border-gray-800 border-gray-200 shadow-2xl rounded-xl max-w-md w-full p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold flex items-center gap-2">
-                  <span className="text-purple-400">🧠</span> Neural Network Predictor
+                  <span className="text-purple-500">🧠</span> Margin & EV Predictor
                 </h2>
-                <button onClick={() => setMlModalOpen(false)} className="dark:text-gray-500 text-gray-500 hover:dark:text-white text-gray-900">✕</button>
+                <button onClick={() => setMlModalOpen(false)} className="dark:text-gray-500 text-gray-400 hover:dark:text-white hover:text-gray-900">✕</button>
               </div>
               
-              <div className="space-y-4 mb-6 text-sm text-gray-300">
-                <p>This runs a real <code className="text-purple-400 bg-purple-900/20 px-1 rounded">brain.js</code> neural network trained on 5,000 synthetic transaction logs.</p>
+              <div className="space-y-4 mb-6 text-sm text-gray-600 dark:text-gray-300">
+                <p>Calculates the Expected Value (ROI) and optimal channel using a <code className="text-purple-500 bg-purple-900/20 px-1 rounded">brain.js</code> neural network trained on 5,000 historical recoveries.</p>
                 
                 <div className="space-y-3">
                   <label className="flex items-center justify-between cursor-pointer">
-                    <span>Mobile Device</span>
-                    <input type="checkbox" checked={mlParams.mobile === 1} onChange={(e) => setMlParams({...mlParams, mobile: e.target.checked ? 1 : 0})} className="accent-purple-500 w-4 h-4" />
+                    <span>Transaction Amount (₹)</span>
+                    <input type="number" min="100" max="100000" value={mlParams.actualAmount || 5000} onChange={(e) => setMlParams({...mlParams, actualAmount: parseInt(e.target.value), amount: parseInt(e.target.value)/50000, highValue: parseInt(e.target.value) > 10000 ? 1 : 0})} className="w-24 px-2 py-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-right" />
                   </label>
                   <label className="flex items-center justify-between cursor-pointer">
-                    <span>Night Time (2AM - 5AM)</span>
-                    <input type="checkbox" checked={mlParams.night === 1} onChange={(e) => setMlParams({...mlParams, night: e.target.checked ? 1 : 0})} className="accent-purple-500 w-4 h-4" />
+                    <span>Customer History Score (0-1)</span>
+                    <input type="number" step="0.1" min="0" max="1" value={mlParams.friction || 0.5} onChange={(e) => setMlParams({...mlParams, friction: parseFloat(e.target.value)})} className="w-24 px-2 py-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-right" />
                   </label>
                   <label className="flex items-center justify-between cursor-pointer">
-                    <span>High Value Transaction (₹10,000+)</span>
-                    <input type="checkbox" checked={mlParams.highAmount === 1} onChange={(e) => setMlParams({...mlParams, highAmount: e.target.checked ? 1 : 0})} className="accent-purple-500 w-4 h-4" />
-                  </label>
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span>Slow Network (High Latency)</span>
-                    <input type="checkbox" checked={mlParams.slowNetwork === 1} onChange={(e) => setMlParams({...mlParams, slowNetwork: e.target.checked ? 1 : 0})} className="accent-purple-500 w-4 h-4" />
+                    <span>Time Since Failure (Days)</span>
+                    <input type="number" min="0" max="14" value={mlParams.timeDelay ? mlParams.timeDelay * 14 : 2} onChange={(e) => setMlParams({...mlParams, timeDelay: parseFloat(e.target.value)/14})} className="w-24 px-2 py-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-right" />
                   </label>
                 </div>
 
                 <button 
                   onClick={testMlModel}
                   disabled={testingMl}
-                  className="w-full mt-4 py-3 bg-purple-600 hover:bg-purple-500 dark:text-white text-gray-900 rounded-lg font-medium transition-colors"
+                  className="w-full mt-4 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-medium transition-colors"
                 >
-                  {testingMl ? 'Running Neural Net...' : 'Predict Drop-off Risk'}
+                  {testingMl ? 'Running Neural Net...' : 'Calculate Expected Value'}
                 </button>
 
                 {mlResult && (
-                  <div className={`mt-4 p-4 rounded-lg border ${mlResult.willDropoff ? 'bg-red-900/20 border-red-800/50 text-red-400' : 'bg-emerald-900/20 border-emerald-800/50 text-emerald-400'}`}>
-                    <div className="font-bold mb-1">
-                      {mlResult.willDropoff ? '⚠️ High Risk of Drop-off' : '✅ Safe Transaction'}
+                  <div className={`mt-4 p-4 rounded-lg border ${mlResult.isProfitable ? 'bg-emerald-900/20 border-emerald-800/50 text-emerald-400' : 'bg-red-900/20 border-red-800/50 text-red-400'}`}>
+                    <div className="font-bold mb-1 text-base">
+                      {mlResult.isProfitable ? '✅ Positive ROI Action' : '❌ Negative ROI (Blocked)'}
                     </div>
-                    <div className="text-xs opacity-80">
-                      Failure Probability: {(mlResult.riskScore * 100).toFixed(2)}%
+                    <div className="text-sm font-mono mt-2 space-y-1">
+                      <div>Optimal Channel: <span className="font-bold text-white">{mlResult.optimalChannel}</span></div>
+                      <div>Expected ROI: <span className="font-bold text-white">₹{mlResult.expectedValue.toFixed(2)}</span></div>
+                      <div>Win Probability: <span className="font-bold text-white">{(mlResult.recoveryProbability * 100).toFixed(1)}%</span></div>
                     </div>
                   </div>
                 )}
